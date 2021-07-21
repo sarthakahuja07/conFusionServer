@@ -7,12 +7,25 @@ var mongoDB = 'mongodb://localhost:27017/test';
 
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(db => {
-        var newDish = new Dish({
-            name: 'Uthappizza',
+        var newDish = Dish({
+            name: 'pizza',
             description: 'test'
         });
-        
-        
 
+        newDish.save() // create
+            .then((dish) => {
+                console.log(dish);
+                return Dish.find({}); //read
+            })
+            .then((dishes) => {
+                console.log(dishes);
+                return Dish.deleteMany({}); //delete
+            })
+            .then(() => {
+                return mongoose.connection.close();
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     })
     .catch(err => console.log(err))
