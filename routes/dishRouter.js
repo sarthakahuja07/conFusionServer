@@ -44,27 +44,38 @@ dishRouter.route('/')
 
 //ROUTE /dishes/:dishId
 
-
 dishRouter.route('/:dishId')
-    .all((req, res, next) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
-        next();
-    })
     .get((req, res, next) => {
-        res.end('Will send details of the dish: ' + req.params.dishId + ' to you!');
+        Dish.findById(req.params.dishId)
+            .then(dish => {
+                res.statusCode = 200;
+                res.setHeader('Content-type', 'application/json');
+                res.json(dish);
+            })
+            .catch(err => next(err))
     })
     .post((req, res, next) => {
         res.statusCode = 403;
         res.end('post operation is forbidden');
     })
     .put((req, res, next) => {
-        res.write('Updating the dish: ' + req.params.dishId + '\n');
-        res.end('Will update the dish: ' + req.body.name +
-            ' with details: ' + req.body.description);
+        Dish.findByIdAndUpdate(req.params.dishId,
+            { $set: req.body }, { new: true })
+            .then(dish => {
+                res.statusCode = 200;
+                res.setHeader('Content-type', 'application/json');
+                res.json(dish);
+            })
+            .catch(err => next(err))
     })
     .delete((req, res, next) => {
-        res.end('Deleting dish: ' + req.params.dishId);
+        Dish.findByIdAndRemove(req.params.dishId)
+            .then(resp => {
+                res.statusCode = 200;
+                res.setHeader('Content-type', 'application/json');
+                res.json(resp);
+            })
+            .catch(err => next(err))
     });
 
 module.exports = dishRouter;
