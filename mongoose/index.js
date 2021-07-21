@@ -2,10 +2,10 @@
 var mongoose = require('mongoose');
 const Dish = require('./models/dishes');
 
-var mongoDB = 'mongodb://localhost:27017/test';
+var mongoDB = 'mongodb://localhost:27017/conFusion';
 
 
-mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
     .then(db => {
         Dish.create({ //Create
             name: 'pizza',
@@ -13,13 +13,20 @@ mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
         })
             .then((dish) => {
                 console.log(dish);
-                return Dish.find({}); //read
+                return Dish.findByIdAndUpdate(dish._id, { $set: { description: 'Updated test' } })
             })
-            .then((dishes) => {
-                console.log(dishes);
-                return Dish.deleteMany({}); //delete
+            .then((dish) => {
+                dish.comments.push({
+                    rating: 5,
+                    comment: 'I\'m getting a sinking feeling!',
+                    author: 'Leonardo di Carpaccio'
+                });
+                return dish.save();
             })
-            .then(() => {
+            .then(dish => {
+                return Dish.deleteMany({})
+            })
+            .then(dish => {
                 return mongoose.connection.close();
             })
             .catch((err) => {
