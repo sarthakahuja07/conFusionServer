@@ -7,12 +7,10 @@ var mongoDB = 'mongodb://localhost:27017/test';
 
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(db => {
-        var newDish = Dish({
+        Dish.create({ //Create
             name: 'pizza',
             description: 'test'
-        });
-
-        newDish.save() // create
+        })
             .then((dish) => {
                 console.log(dish);
                 return Dish.find({}); //read
