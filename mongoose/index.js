@@ -4,7 +4,6 @@ const Dish = require('./models/dishes');
 
 var mongoDB = 'mongodb://localhost:27017/conFusion';
 
-
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
     .then(db => {
         Dish.create({ //Create
