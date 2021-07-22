@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
+var session = require('express-session')
+var FileStore = require('session-file-store')(session);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -20,11 +22,17 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser('sarthak07'));
+app.use(session({
+	name: 'session-id',
+	saveUninitialized: false,
+	resave: false,
+	secret: 'sarthak07',
+	store: new FileStore(),
+}))
 
 //AUTH
 const auth = (req, res, next) => {
-	if (!req.signedCookies.user) {
+	if (!req.session.user) {
 		const authHeader = req.headers.authorization;
 		if (!authHeader) {
 			res.setHeader('WWW-Authenticate', 'Basic');
@@ -35,7 +43,7 @@ const auth = (req, res, next) => {
 		const [username, password] = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
 
 		if (username && password && username === 'admin' && password === 'password') {
-			res.cookie('user', 'admin', { signed: true })
+			req.session.user='admin'
 			return next()
 		} else {
 			res.setHeader('WWW-Authenticate', 'Basic');
@@ -44,7 +52,7 @@ const auth = (req, res, next) => {
 			return next(err);
 		}
 	} else {
-		if (req.signedCookies.user === 'admin') {
+		if (req.session.user === 'admin') {
 			return next()
 		} else {
 			const err = new Error("wrong username pass");
