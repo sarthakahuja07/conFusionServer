@@ -151,41 +151,103 @@ dishRouter.route('/:dishId/comments')
             .catch(err => next(err))
     });
 
-//ROUTE /dishes/:dishId/comments/:commentId
+// ROUTE / dishes /: dishId / comments /: commentId
 
-// dishRouter.route('/:dishId/comments/:commentId')
-//     .get((req, res, next) => {
-//         Dish.findById(req.params.dishId)
-//             .then(dish => {
-//                 res.statusCode = 200;
-//                 res.setHeader('Content-type', 'application/json');
-//                 res.json(dish);
-//             })
-//             .catch(err => next(err))
-//     })
-//     .post((req, res, next) => {
-//         res.statusCode = 403;
-//         res.end('post operation is forbidden');
-//     })
-//     .put((req, res, next) => {
-//         Dish.findByIdAndUpdate(req.params.dishId,
-//             { $set: req.body }, { new: true })
-//             .then(dish => {
-//                 res.statusCode = 200;
-//                 res.setHeader('Content-type', 'application/json');
-//                 res.json(dish);
-//             })
-//             .catch(err => next(err))
-//     })
-//     .delete((req, res, next) => {
-//         Dish.findByIdAndRemove(req.params.dishId)
-//             .then(resp => {
-//                 res.statusCode = 200;
-//                 res.setHeader('Content-type', 'application/json');
-//                 res.json(resp);
-//             })
-//             .catch(err => next(err))
-//     });
+dishRouter.route('/:dishId/comments/:commentId')
+    .get((req, res, next) => {
+        Dish.findById(req.params.dishId)
+            .then(dish => {
+                dish ?
+                    (
+                        dish.comments?.id(req.params.commentId) ?
+                            (
+                                res.statusCode = 200,
+                                res.setHeader('Content-type', 'application/json'),
+                                res.json(dish?.comments?.id(req.params.commentId))
+                            )
+                            :
+                            (
+                                err = new Error('Comment ' + req.params.commentId + ' not found'),
+                                err.status = 404,
+                                next(err)
+                            )
+                    )
+                    :
+                    (
+                        err = new Error('Dish ' + req.params.dishId + ' not found'),
+                        err.status = 404,
+                        next(err)
+                    )
+            })
+            .catch(err => next(err))
+    })
+    .post((req, res, next) => {
+        res.statusCode = 403;
+        res.end('post operation is forbidden');
+    })
+    .put((req, res, next) => {
+        Dish.findById(req.params.dishId)
+            .then(dish => {
+                dish ?
+                    (
+                        dish.comments?.id(req.params.commentId) ?
+                            (
+                                res.statusCode = 200,
+                                res.setHeader('Content-type', 'application/json'),
+                                myComment = dish?.comments?.id(req.params.commentId),
+                                myComment.set(req.body),
+                                dish.save()
+                                    .then(dish => {
+                                        res.json(dish)
+                                    })
+                            )
+                            :
+                            (
+                                err = new Error('Comment ' + req.params.commentId + ' not found'),
+                                err.status = 404,
+                                next(err)
+                            )
+                    )
+                    :
+                    (
+                        err = new Error('Dish ' + req.params.dishId + ' not found'),
+                        err.status = 404,
+                        next(err)
+                    )
+            })
+            .catch(err => next(err))
+    })
+    .delete((req, res, next) => {
+        Dish.findById(req.params.dishId)
+            .then(dish => {
+                dish ?
+                    (
+                        dish.comments?.id(req.params.commentId) ?
+                            (
+                                res.statusCode = 200,
+                                res.setHeader('Content-type', 'application/json'),
+                                dish?.comments?.id(req.params.commentId).remove(),
+                                dish.save()
+                                    .then(dish => {
+                                        res.json(dish)
+                                    })
+                            )
+                            :
+                            (
+                                err = new Error('Comment ' + req.params.commentId + ' not found'),
+                                err.status = 404,
+                                next(err)
+                            )
+                    )
+                    :
+                    (
+                        err = new Error('Dish ' + req.params.dishId + ' not found'),
+                        err.status = 404,
+                        next(err)
+                    )
+            })
+            .catch(err => next(err))
+    });
 
 
 
