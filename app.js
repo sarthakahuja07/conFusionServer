@@ -20,27 +20,38 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('sarthak07'));
 
 //AUTH
 const auth = (req, res, next) => {
-	const authHeader = req.headers.authorization;
-	if (!authHeader) {
-		res.setHeader('WWW-Authenticate', 'Basic');
-		const err = new Error("unatuthenticated");
-		err.status = 401;
-		return next(err);
-	}
-	const [username, password] = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+	if (!req.signedCookies.user) {
+		const authHeader = req.headers.authorization;
+		if (!authHeader) {
+			res.setHeader('WWW-Authenticate', 'Basic');
+			const err = new Error("unauthorized");
+			err.status = 401;
+			return next(err);
+		}
+		const [username, password] = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
 
-	if (username && password && username === 'admin' && password === 'password') {
-		return next()
+		if (username && password && username === 'admin' && password === 'password') {
+			res.cookie('user', 'admin', { signed: true })
+			return next()
+		} else {
+			res.setHeader('WWW-Authenticate', 'Basic');
+			const err = new Error("wrong username pass");
+			err.status = 401;
+			return next(err);
+		}
 	} else {
-		const err = new Error("wrong username pass");
-		err.status = 401;
-		return next(err);
+		if (req.signedCookies.user === 'admin') {
+			return next()
+		} else {
+			const err = new Error("wrong username pass");
+			err.status = 401;
+			return next(err);
+		}
 	}
-
 }
 
 app.use(auth)
