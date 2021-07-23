@@ -29,34 +29,21 @@ app.use(session({
 	secret: 'sarthak07',
 	store: new FileStore(),
 }))
-
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 //AUTH
 const auth = (req, res, next) => {
 	if (!req.session.user) {
-		const authHeader = req.headers.authorization;
-		if (!authHeader) {
-			res.setHeader('WWW-Authenticate', 'Basic');
-			const err = new Error("unauthorized");
-			err.status = 401;
-			return next(err);
-		}
-		const [username, password] = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-
-		if (username && password && username === 'admin' && password === 'password') {
-			req.session.user='admin'
-			return next()
-		} else {
-			res.setHeader('WWW-Authenticate', 'Basic');
-			const err = new Error("wrong username pass");
-			err.status = 401;
-			return next(err);
-		}
+		var err = new Error('You are not authenticated!');
+		err.status = 403;
+		return next(err);
 	} else {
-		if (req.session.user === 'admin') {
-			return next()
-		} else {
-			const err = new Error("wrong username pass");
-			err.status = 401;
+		if (req.session.user === 'authenticated') {
+			next();
+		}
+		else {
+			var err = new Error('You are not authenticated!');
+			err.status = 403;
 			return next(err);
 		}
 	}
@@ -65,9 +52,6 @@ const auth = (req, res, next) => {
 app.use(auth)
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/dishes', dishRouter);
 app.use('/leaders', leaderRouter);
 app.use('/promos', promoRouter);
