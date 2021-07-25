@@ -2,7 +2,7 @@ var express = require('express');
 var userRouter = express.Router();
 const mongoose = require('mongoose');
 const User = require('../models/user');
-
+var authenticate = require('../authenticate');
 const passport = require('passport');
 
 userRouter.use(express.json());//bodyParser
@@ -28,22 +28,16 @@ userRouter.post('/signup', (req, res, next) => {
 })
 
 userRouter.post('/signin', passport.authenticate('local', { failureRedirect: '/signin', failureFlash: true }), (req, res, next) => {
+	var token = authenticate.getToken({ _id: req.user._id });
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'application/json');
-	res.json({ success: true, status: 'You are successfully logged in!' });
+	res.json({ success: true, token: token, status: 'You are successfully logged in!' });
 })
 
-userRouter.get('/logout', (req, res, next) => {
-	if (req.session) {
-		req.session.destroy();
-		res.clearCookie('session-id');
-		res.redirect('/');
-	}
-	else {
-		var err = new Error('You are not logged in!');
-		err.status = 403;
-		next(err);
-	}
+userRouter.get('/logout', authenticate.verifyUser, (req, res, next) => {
+	res.statusCode = 200;
+	res.setHeader('Content-Type', 'application/json');
+	res.json({ success: true, token: token, status: 'You are successfully logged out!' });
 })
 
 module.exports = userRouter;
