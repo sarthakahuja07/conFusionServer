@@ -21,7 +21,7 @@ dishRouter.route('/')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dish.create(req.body)
             .then(dish => {
                 res.statusCode = 200;
@@ -30,11 +30,11 @@ dishRouter.route('/')
             })
             .catch(err => next(err))
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /dishes');
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
         Dish.remove({})
             .then(resp => {
                 res.statusCode = 200;
@@ -57,11 +57,11 @@ dishRouter.route('/:dishId')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('post operation is forbidden');
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
         Dish.findByIdAndUpdate(req.params.dishId,
             { $set: req.body }, { new: true })
             .then(dish => {
@@ -71,7 +71,7 @@ dishRouter.route('/:dishId')
             })
             .catch(err => next(err))
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
         Dish.findByIdAndRemove(req.params.dishId)
             .then(resp => {
                 res.statusCode = 200;
@@ -138,7 +138,7 @@ dishRouter.route('/:dishId/comments')
         res.statusCode = 403;
         res.end('PUT operation not supported');
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
         Dish.findById(req.params.dishId)
             .then(dish => {
                 dish ?
