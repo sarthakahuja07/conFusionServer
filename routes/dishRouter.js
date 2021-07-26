@@ -30,11 +30,11 @@ dishRouter.route('/')
             })
             .catch(err => next(err))
     })
-    .put(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /dishes');
     })
-    .delete(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dish.remove({})
             .then(resp => {
                 res.statusCode = 200;
@@ -57,11 +57,11 @@ dishRouter.route('/:dishId')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('post operation is forbidden');
     })
-    .put(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dish.findByIdAndUpdate(req.params.dishId,
             { $set: req.body }, { new: true })
             .then(dish => {
@@ -71,7 +71,7 @@ dishRouter.route('/:dishId')
             })
             .catch(err => next(err))
     })
-    .delete(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dish.findByIdAndRemove(req.params.dishId)
             .then(resp => {
                 res.statusCode = 200;
@@ -138,7 +138,7 @@ dishRouter.route('/:dishId/comments')
         res.statusCode = 403;
         res.end('PUT operation not supported');
     })
-    .delete(authenticate.verifyUser,authenticate.verifyAdmin, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dish.findById(req.params.dishId)
             .then(dish => {
                 dish ?
@@ -203,20 +203,28 @@ dishRouter.route('/:dishId/comments/:commentId')
                     (
                         dish.comments?.id(req.params.commentId) ?
                             (
-                                res.statusCode = 200,
-                                res.setHeader('Content-type', 'application/json'),
                                 myComment = dish?.comments?.id(req.params.commentId),
-                                myComment.set(req.body),
-                                dish.save()
-                                    .then(dish => {
-                                        Dish.findById(dish._id)
-                                            .populate('comments.author')
-                                            .then((dish) => {
-                                                res.statusCode = 200;
-                                                res.setHeader('Content-Type', 'application/json');
-                                                res.json(dish);
+                                !myComment.author._id.equals(req.user._id) ?
+                                    (
+                                        err = new Error("You are not authorized to perform this operation!"),
+                                        err.status = 404,
+                                        next(err)
+                                    ) :
+                                    (
+                                        res.statusCode = 200,
+                                        res.setHeader('Content-type', 'application/json'),
+                                        myComment.set(req.body),
+                                        dish.save()
+                                            .then(dish => {
+                                                Dish.findById(dish._id)
+                                                    .populate('comments.author')
+                                                    .then((dish) => {
+                                                        res.statusCode = 200;
+                                                        res.setHeader('Content-Type', 'application/json');
+                                                        res.json(dish);
+                                                    })
                                             })
-                                    })
+                                    )
                             )
                             :
                             (
@@ -241,13 +249,24 @@ dishRouter.route('/:dishId/comments/:commentId')
                     (
                         dish.comments?.id(req.params.commentId) ?
                             (
-                                res.statusCode = 200,
-                                res.setHeader('Content-type', 'application/json'),
-                                dish?.comments?.id(req.params.commentId).remove(),
-                                dish.save()
-                                    .then(dish => {
-                                        res.json(dish)
-                                    })
+                                myComment = dish?.comments?.id(req.params.commentId),
+                                !myComment.author._id.equals(req.user._id) ?
+                                    (
+                                        err = new Error("You are not authorized to perform this operation!"),
+                                        err.status = 404,
+                                        next(err)
+                                    ) :
+                                    (
+                                        res.statusCode = 200,
+                                        res.setHeader('Content-type', 'application/json'),
+                                        dish?.comments?.id(req.params.commentId).remove(),
+                                        dish.save()
+                                            .then(dish => {
+                                                res.json(dish)
+                                            })
+                                    )
+
+
                             )
                             :
                             (
