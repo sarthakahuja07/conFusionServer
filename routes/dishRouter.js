@@ -13,6 +13,7 @@ dishRouter.use(express.json());//bodyParser
 dishRouter.route('/')
     .get((req, res, next) => {
         Dish.find({})
+            .populate('comments.author')
             .then(dishes => {
                 res.statusCode = 200;
                 res.setHeader('Content-type', 'application/json');
@@ -20,7 +21,7 @@ dishRouter.route('/')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser,(req, res, next) => {
+    .post(authenticate.verifyUser, (req, res, next) => {
         Dish.create(req.body)
             .then(dish => {
                 res.statusCode = 200;
@@ -29,11 +30,11 @@ dishRouter.route('/')
             })
             .catch(err => next(err))
     })
-    .put(authenticate.verifyUser,(req, res, next) => {
+    .put(authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /dishes');
     })
-    .delete(authenticate.verifyUser,(req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Dish.remove({})
             .then(resp => {
                 res.statusCode = 200;
@@ -48,6 +49,7 @@ dishRouter.route('/')
 dishRouter.route('/:dishId')
     .get((req, res, next) => {
         Dish.findById(req.params.dishId)
+            .populate('comments.author')
             .then(dish => {
                 res.statusCode = 200;
                 res.setHeader('Content-type', 'application/json');
@@ -55,11 +57,11 @@ dishRouter.route('/:dishId')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser,(req, res, next) => {
+    .post(authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('post operation is forbidden');
     })
-    .put(authenticate.verifyUser,(req, res, next) => {
+    .put(authenticate.verifyUser, (req, res, next) => {
         Dish.findByIdAndUpdate(req.params.dishId,
             { $set: req.body }, { new: true })
             .then(dish => {
@@ -69,7 +71,7 @@ dishRouter.route('/:dishId')
             })
             .catch(err => next(err))
     })
-    .delete(authenticate.verifyUser,(req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Dish.findByIdAndRemove(req.params.dishId)
             .then(resp => {
                 res.statusCode = 200;
@@ -87,6 +89,7 @@ dishRouter.route('/:dishId')
 dishRouter.route('/:dishId/comments')
     .get((req, res, next) => {
         Dish.findById(req.params.dishId)
+            .populate('comments.author')
             .then(dish => {
                 dish ?
                     (
@@ -103,17 +106,23 @@ dishRouter.route('/:dishId/comments')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser,(req, res, next) => {
+    .post(authenticate.verifyUser, (req, res, next) => {
         Dish.findById(req.params.dishId)
+            .populate('comments.author')
             .then(dish => {
                 dish ?
                     (
+                        req.body.author = req.user._id,
                         dish?.comments.push(req.body),
                         dish.save()
                             .then(dish => {
-                                res.statusCode = 200,
-                                    res.setHeader('Content-type', 'application/json'),
-                                    res.json(dish)
+                                Dish.findById(dish._id)
+                                    .populate('comments.author')
+                                    .then(dish => {
+                                        res.statusCode = 200,
+                                            res.setHeader('Content-type', 'application/json'),
+                                            res.json(dish)
+                                    })
                             })
                     )
                     :
@@ -125,11 +134,11 @@ dishRouter.route('/:dishId/comments')
             })
             .catch(err => next(err))
     })
-    .put(authenticate.verifyUser,(req, res, next) => {
+    .put(authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported');
     })
-    .delete(authenticate.verifyUser,(req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Dish.findById(req.params.dishId)
             .then(dish => {
                 dish ?
@@ -157,6 +166,7 @@ dishRouter.route('/:dishId/comments')
 dishRouter.route('/:dishId/comments/:commentId')
     .get((req, res, next) => {
         Dish.findById(req.params.dishId)
+            .populate('comments.author')
             .then(dish => {
                 dish ?
                     (
@@ -182,11 +192,11 @@ dishRouter.route('/:dishId/comments/:commentId')
             })
             .catch(err => next(err))
     })
-    .post(authenticate.verifyUser,(req, res, next) => {
+    .post(authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('post operation is forbidden');
     })
-    .put(authenticate.verifyUser,(req, res, next) => {
+    .put(authenticate.verifyUser, (req, res, next) => {
         Dish.findById(req.params.dishId)
             .then(dish => {
                 dish ?
@@ -199,7 +209,13 @@ dishRouter.route('/:dishId/comments/:commentId')
                                 myComment.set(req.body),
                                 dish.save()
                                     .then(dish => {
-                                        res.json(dish)
+                                        Dish.findById(dish._id)
+                                            .populate('comments.author')
+                                            .then((dish) => {
+                                                res.statusCode = 200;
+                                                res.setHeader('Content-Type', 'application/json');
+                                                res.json(dish);
+                                            })
                                     })
                             )
                             :
@@ -218,7 +234,7 @@ dishRouter.route('/:dishId/comments/:commentId')
             })
             .catch(err => next(err))
     })
-    .delete(authenticate.verifyUser,(req, res, next) => {
+    .delete(authenticate.verifyUser, (req, res, next) => {
         Dish.findById(req.params.dishId)
             .then(dish => {
                 dish ?

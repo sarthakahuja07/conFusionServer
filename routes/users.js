@@ -13,7 +13,7 @@ userRouter.get('/', function (req, res, next) {
 });
 
 userRouter.post('/signup', (req, res, next) => {
-	User.register(new User({ username: req.body.username }), req.body.password, (err, user) => {
+	User.register(new User({ username: req.body.username, firstname: req.body.firstname, lastname: req.body.lastname }), req.body.password, (err, user) => {
 		if (err) {
 			res.statusCode = 500;
 			res.setHeader('Content-Type', 'application/json');
@@ -37,7 +37,7 @@ userRouter.post('/signin', passport.authenticate('local', { failureRedirect: '/s
 userRouter.get('/logout', authenticate.verifyUser, (req, res, next) => {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'application/json');
-	res.json({ success: true, token: token, status: 'You are successfully logged out!' });
+	res.json({ success: true, status: 'You are successfully logged out!' });
 })
 
 module.exports = userRouter;
