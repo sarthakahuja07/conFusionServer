@@ -8,8 +8,19 @@ const passport = require('passport');
 userRouter.use(express.json());//bodyParser
 
 /* GET users listing. */
-userRouter.get('/', function (req, res, next) {
-	res.send('respond with a resource');
+userRouter.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
+	User.find({})
+		.then(users => {
+			if (users) {
+				res.status = 200;
+				res.setHeader("Content-type", "application/json");
+				res.json(users)
+			} else {
+				err = new Error("No users found")
+				err.state = 404;
+				next(err)
+			}
+		})
 });
 
 userRouter.post('/signup', (req, res, next) => {
