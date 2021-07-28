@@ -12,6 +12,7 @@ const passportLocalMongoose = require('passport-local-mongoose');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var uploadRouter = require('./routes/uploadRouter');
 const dishRouter = require('./routes/dishRouter');
 const leaderRouter = require('./routes/leaderRouter');
 const promoRouter = require('./routes/promoRouter');
@@ -44,6 +45,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dishes', dishRouter);
 app.use('/leaders', leaderRouter);
 app.use('/promos', promoRouter);
+app.use('/imageUpload', uploadRouter);
 
 //DB
 var mongoDB = config.mongoUrl;
