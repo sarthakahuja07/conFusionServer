@@ -4,11 +4,12 @@ const mongoose = require('mongoose');
 const User = require('../models/user');
 var authenticate = require('../authenticate');
 const passport = require('passport');
+const cors = require('./cors');
 
 userRouter.use(express.json());//bodyParser
 
 /* GET users listing. */
-userRouter.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
+userRouter.get('/', cors.cors, authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
 	User.find({})
 		.then(users => {
 			if (users) {
@@ -23,7 +24,7 @@ userRouter.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function 
 		})
 });
 
-userRouter.post('/signup', (req, res, next) => {
+userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
 	User.register(new User({ username: req.body.username, firstname: req.body.firstname, lastname: req.body.lastname }), req.body.password, (err, user) => {
 		if (err) {
 			res.statusCode = 500;
@@ -38,14 +39,14 @@ userRouter.post('/signup', (req, res, next) => {
 	})
 })
 
-userRouter.post('/signin', passport.authenticate('local', { failureRedirect: '/signin', failureFlash: true }), (req, res, next) => {
+userRouter.post('/signin', cors.corsWithOptions, passport.authenticate('local', { failureRedirect: '/signin', failureFlash: true }), (req, res, next) => {
 	var token = authenticate.getToken({ _id: req.user._id });
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'application/json');
 	res.json({ success: true, token: token, status: 'You are successfully logged in!' });
 })
 
-userRouter.get('/logout', authenticate.verifyUser, (req, res, next) => {
+userRouter.get('/logout', cors.cors, authenticate.verifyUser, (req, res, next) => {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'application/json');
 	res.json({ success: true, status: 'You are successfully logged out!' });
