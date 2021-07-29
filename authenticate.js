@@ -5,6 +5,7 @@ const LocalStrategy = require('passport-local');
 const JwtStrategy = require('passport-jwt').Strategy,
     ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
+const FacebookStrategy = require('passport-facebook').Strategy;
 
 //LOCAL STRATEGY
 
@@ -47,3 +48,36 @@ exports.verifyAdmin = (req, res, next) => {
         next(err);
     }
 }
+
+// Passport Facebook
+
+passport.use(new FacebookStrategy({
+    clientID: config.facebook.clientId,
+    clientSecret: config.facebook.clientSecret,
+    callbackURL: "http://localhost:3000/auth/facebook/callback"
+},
+    function (accessToken, refreshToken, profile, cb) {
+        User.findOne({ facebookId: profile.id }, function (err, user) {
+            if (err) {
+                return cb(err, false);
+            }
+            if (user) {
+                cb(null, user);
+            } else {
+                user = new User({
+                    username: profile.displayName,
+                    facebookId : profile.id,
+                    firstname : profile.name.givenName,
+                    lastname : profile.name.familyName
+                });
+                user.save(function (err) {
+                    if (err) {
+                        return cb(err, false);
+                    } else {
+                        cb(null, user);
+                    }
+                });
+            }
+        });
+    }
+));
