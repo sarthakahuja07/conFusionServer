@@ -83,11 +83,11 @@ passport.use(new FacebookStrategy({
 ));
 
 passport.use(new GoogleStrategy({
-    clientID: config.facebook.clientId,
-    clientSecret: config.facebook.clientSecret,
+    clientID: config.google.clientId,
+    clientSecret: config.google.clientSecret,
 },
     function (accessToken, refreshToken, profile, cb) {
-        User.findOne({ facebookId: profile.id }, function (err, user) {
+        User.findOne({ googleId: profile.id }, function (err, user) {
             if (err) {
                 return cb(err, false);
             }
@@ -96,7 +96,7 @@ passport.use(new GoogleStrategy({
             } else {
                 user = new User({
                     username: profile.displayName,
-                    facebookId: profile.id,
+                    googleId: profile.id,
                     firstname: profile.name.givenName,
                     lastname: profile.name.familyName
                 });
