@@ -16,6 +16,7 @@ var uploadRouter = require('./routes/uploadRouter');
 const dishRouter = require('./routes/dishRouter');
 const leaderRouter = require('./routes/leaderRouter');
 const promoRouter = require('./routes/promoRouter');
+const favoriteRouter = require('./routes/favoriteRouter');
 var authenticate = require('./authenticate');
 const passport = require('passport');
 
@@ -46,6 +47,7 @@ app.use('/dishes', dishRouter);
 app.use('/leaders', leaderRouter);
 app.use('/promos', promoRouter);
 app.use('/imageUpload', uploadRouter);
+app.use('/favorites', favoriteRouter);
 
 //DB
 var mongoDB = config.mongoUrl;
