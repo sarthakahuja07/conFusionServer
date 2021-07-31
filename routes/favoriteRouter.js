@@ -1,22 +1,25 @@
+
 const express = require('express');
+var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 const authenticate = require('../authenticate');
 const cors = require('./cors');
 
 const Favorite = require('../models/favorites');
-const User = require('../models/user');
 
-const favoriteRouter = express.Router()
+const favoriteRouter = express.Router();
 favoriteRouter.use(express.json());//bodyParser
 
 
+// /favorites
+
 favoriteRouter.route('/')
     .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-        Favorite.find({ user: req.user })
+        Favorite.find({ user: req.user._id })
             .populate('user')
             .populate('dishes')
             .then((favorites) => {
-                if (favorites.length == 0) {
+                if (!favorites.dishes) {
                     const err = new Error("you have no favorites")
                     err.status = 404
                     return next(err)
@@ -26,5 +29,80 @@ favoriteRouter.route('/')
                 res.json(favorites)
             })
     })
+
+
+
+// /favorites/:dishId
+
+favoriteRouter.route('/:dishId/')
+    .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
+        Favorite.find({ user: req.user._id })
+            .populate('user')
+            .populate('dishes')
+            .then(favorite => {
+                const dish = favorite?.dishes?.filter(dish => {
+                    return (dish._id === req.params.dishId)
+                })
+
+                if (!dish) {
+                    const err = new Error('you do not have this dish as fav')
+                    err.status = 404
+                    return next(err)
+                }
+
+                res.statusCode = 200
+                res.setHeader('Content-type', 'application/json')
+                res.json(dish)
+            })
+    })
+
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+
+
+        Favorite.findOne({ user: req.user._id })
+            .populate('user')
+            .populate('dishes')
+            .then(favorite => {
+                if (favorite.length == 0) {
+                    Favorite.create({ user: req.user._id })
+                        .then(userFav => {
+                            userFav.dishes.push(req.params.dishId)
+                            userFav.save()
+                                .then(favs => {
+                                    res.statusCode = 200;
+                                    res.setHeader("Content-Type", "application/json");
+                                    res.json(favs);
+                                })
+                        })
+                } else {
+
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json(favorite.user);
+
+                    // const dish = favorite.dishes.id(req.params.dishId);
+                    // if (!dish) {
+                    //     favorite.dishes?.push(req.params.dishId)
+                    //     favorite.save()
+                    //         .then(favs => {
+                    //             res.statusCode = 200;
+                    //             res.setHeader("Content-Type", "application/json");
+                    //             res.json(favs);
+                    //         })
+                    // }
+                    // else {
+                    //     const err = new Error('you already have this dish as fav')
+                    //     err.status = 404
+                    //     return next(err)
+                    // }
+                }
+
+
+
+            })
+    })
+
+
+
 
 module.exports = favoriteRouter
