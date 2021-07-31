@@ -15,7 +15,7 @@ favoriteRouter.use(express.json());//bodyParser
 
 favoriteRouter.route('/')
     .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-        Favorite.find({ user: req.user._id })
+        Favorite.findOne({ user: req.user._id })
             .populate('user')
             .populate('dishes')
             .then((favorites) => {
@@ -36,15 +36,15 @@ favoriteRouter.route('/')
 
 favoriteRouter.route('/:dishId/')
     .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-        Favorite.find({ user: req.user._id })
+        Favorite.findOne({ user: req.user._id })
             .populate('user')
             .populate('dishes')
             .then(favorite => {
-                const dish = favorite?.dishes?.filter(dish => {
-                    return (dish._id === req.params.dishId)
+                const dish = favorite.dishes.filter(dish => {
+                    return (dish._id.toString() === req.params.dishId)
                 })
 
-                if (!dish) {
+                if (dish.length === 0) {
                     const err = new Error('you do not have this dish as fav')
                     err.status = 404
                     return next(err)
@@ -57,13 +57,11 @@ favoriteRouter.route('/:dishId/')
     })
 
     .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-
-
         Favorite.findOne({ user: req.user._id })
             .populate('user')
             .populate('dishes')
             .then(favorite => {
-                if (favorite.length == 0) {
+                if (!favorite) {
                     Favorite.create({ user: req.user._id })
                         .then(userFav => {
                             userFav.dishes.push(req.params.dishId)
@@ -75,26 +73,24 @@ favoriteRouter.route('/:dishId/')
                                 })
                         })
                 } else {
+                    const dish = favorite.dishes.filter(dish => {
+                        return (dish._id.toString() === req.params.dishId)
+                    })
 
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json(favorite.user);
-
-                    // const dish = favorite.dishes.id(req.params.dishId);
-                    // if (!dish) {
-                    //     favorite.dishes?.push(req.params.dishId)
-                    //     favorite.save()
-                    //         .then(favs => {
-                    //             res.statusCode = 200;
-                    //             res.setHeader("Content-Type", "application/json");
-                    //             res.json(favs);
-                    //         })
-                    // }
-                    // else {
-                    //     const err = new Error('you already have this dish as fav')
-                    //     err.status = 404
-                    //     return next(err)
-                    // }
+                    if (dish.length === 0) {
+                        favorite.dishes.push(req.params.dishId)
+                        favorite.save()
+                            .then(favs => {
+                                res.statusCode = 200;
+                                res.setHeader("Content-Type", "application/json");
+                                res.json(favs);
+                            })
+                    }
+                    else {
+                        const err = new Error('you already have this dish as fav')
+                        err.status = 404
+                        return next(err)
+                    }
                 }
 
 
