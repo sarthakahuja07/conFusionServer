@@ -151,9 +151,40 @@ favoriteRouter.route('/:dishId/')
                         return next(err)
                     }
                 }
-
-
-
+            })
+    })
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        res.statusCode = 403;
+        res.end('PUT operation is not supported on /favourites/:dishId');
+    })
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Favorite.findOne({ user: req.user._id })
+            .populate('user')
+            .populate('dishes')
+            .then(favorite => {
+                if (!favorite) {
+                    const err = new Error('no fav dishes')
+                    err.status = 404
+                    return next(err)
+                } else {
+                    const dish = favorite.dishes.filter(dish => {
+                        return (dish._id.toString() === req.params.dishId)
+                    })[0]
+                    if (!dish) {
+                        const err = new Error('this isnt ur fav')
+                        err.status = 404
+                        return next(err)
+                    }
+                    else {
+                        dish.remove();
+                        favorite.save()
+                            .then(favs => {
+                                res.statusCode = 200;
+                                res.setHeader("Content-Type", "application/json");
+                                res.json(favs);
+                            })
+                    }
+                }
             })
     })
 
