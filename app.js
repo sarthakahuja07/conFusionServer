@@ -17,6 +17,7 @@ const dishRouter = require('./routes/dishRouter');
 const leaderRouter = require('./routes/leaderRouter');
 const promoRouter = require('./routes/promoRouter');
 const favoriteRouter = require('./routes/favoriteRouter');
+var commentRouter = require('./routes/commentRouter');
 var authenticate = require('./authenticate');
 const passport = require('passport');
 
@@ -44,6 +45,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dishes', dishRouter);
+app.use('/comments',commentRouter);
 app.use('/leaders', leaderRouter);
 app.use('/promos', promoRouter);
 app.use('/imageUpload', uploadRouter);
