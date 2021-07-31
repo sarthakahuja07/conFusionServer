@@ -42,23 +42,28 @@ favoriteRouter.route('/')
                             res.json(favs);
                         })
                 } else {
-                    const dish = favorite.dishes.filter(dish => {
-                        return (dish._id.toString() === req.params.dishId)
+                    var favDishes = favorite.dishes.map(dish => {
+                        return (dish._id)
+                    })
+                    var dishes = req.body.filter(dish => {
+                        return (!favDishes.includes(dish._id))
                     })
 
-                    if (dish.length === 0) {
-                        favorite.dishes.push(req.params.dishId)
+                    if (dishes.length === 0) {
+                        const err = new Error('you already have these dish as fav')
+                        err.status = 404
+                        return next(err)
+                    }
+                    else {
+                        dishes.map(dish => {
+                            favorite.dishes.push(dish)
+                        })
                         favorite.save()
                             .then(favs => {
                                 res.statusCode = 200;
                                 res.setHeader("Content-Type", "application/json");
                                 res.json(favs);
                             })
-                    }
-                    else {
-                        const err = new Error('you already have this dish as fav')
-                        err.status = 404
-                        return next(err)
                     }
                 }
             })
