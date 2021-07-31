@@ -19,7 +19,7 @@ favoriteRouter.route('/')
             .populate('user')
             .populate('dishes')
             .then((favorites) => {
-                if (!favorites.dishes) {
+                if (!favorites) {
                     const err = new Error("you have no favorites")
                     err.status = 404
                     return next(err)
@@ -29,6 +29,21 @@ favoriteRouter.route('/')
                 res.json(favorites)
             })
     })
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        res.statusCode = 403;
+        res.end('PUT operation is not supported on /favourites');
+    })
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Favorite.findOneAndDelete({ user: req.user._id })
+            .populate('user')
+            .populate('dishes')
+            .then(fav => {
+                res.statusCode = 200
+                res.setHeader('Content-type', 'application/json')
+                res.json(fav)
+            })
+    })
+
 
 
 
