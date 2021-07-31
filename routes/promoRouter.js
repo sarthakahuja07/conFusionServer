@@ -12,7 +12,7 @@ promoRouter.use(express.json());//bodyParser
 promoRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })    
     .get(cors.cors, (req, res, next) => {
-        Promotion.find({})
+        Promotion.find(req.query)
             .then(promotions => {
                 res.statusCode = 200;
                 res.setHeader('Content-type', 'application/json');

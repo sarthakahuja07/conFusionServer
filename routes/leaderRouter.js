@@ -11,7 +11,7 @@ leaderRouter.use(express.json());//bodyParser
 leaderRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })    
     .get(cors.cors, (req, res, next) => {
-        Leader.find({})
+        Leader.find(req.query)
             .then(leaders => {
                 res.statusCode = 200;
                 res.setHeader('Content-type', 'application/json');
