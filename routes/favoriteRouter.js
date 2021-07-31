@@ -29,6 +29,40 @@ favoriteRouter.route('/')
                 res.json(favorites)
             })
     })
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Favorite.findOne({ user: req.user._id })
+            .populate('user')
+            .populate('dishes')
+            .then(favorite => {
+                if (!favorite) {
+                    Favorite.create({ user: req.user._id, dishes: req.body })
+                        .then(favs => {
+                            res.statusCode = 200;
+                            res.setHeader("Content-Type", "application/json");
+                            res.json(favs);
+                        })
+                } else {
+                    const dish = favorite.dishes.filter(dish => {
+                        return (dish._id.toString() === req.params.dishId)
+                    })
+
+                    if (dish.length === 0) {
+                        favorite.dishes.push(req.params.dishId)
+                        favorite.save()
+                            .then(favs => {
+                                res.statusCode = 200;
+                                res.setHeader("Content-Type", "application/json");
+                                res.json(favs);
+                            })
+                    }
+                    else {
+                        const err = new Error('you already have this dish as fav')
+                        err.status = 404
+                        return next(err)
+                    }
+                }
+            })
+    })
     .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation is not supported on /favourites');
@@ -38,6 +72,11 @@ favoriteRouter.route('/')
             .populate('user')
             .populate('dishes')
             .then(fav => {
+                if (!fav) {
+                    const err = new Error('no fav dishes')
+                    err.status = 404
+                    return next(err)
+                }
                 res.statusCode = 200
                 res.setHeader('Content-type', 'application/json')
                 res.json(fav)
