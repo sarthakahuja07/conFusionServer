@@ -2,7 +2,7 @@ var express = require('express')
 var cors = require('cors')
 var app = express()
 
-var allowlist = ['http://localhost:3000', 'https://localhost:3443']
+var allowlist = ['http://localhost:3000', 'https://localhost:3443','http://Sarthak:3001']
 var corsOptionsDelegate = function (req, callback) {
     var corsOptions;
     if (allowlist.indexOf(req.header('Origin')) !== -1) {
